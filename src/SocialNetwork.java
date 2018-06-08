@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
@@ -5,17 +6,109 @@ import java.util.Random;
 public class SocialNetwork {
 
     private List<Agent> agents;
-    private int numberOfAgents;
+    private int numberOfAliveHealthyAgents;
+    private int numberOfAliveInfectedAgents;
+    private int numberOfAliveImmuneAgents;
 
-    private void initRandomly(Properties p) {
-        this.numberOfAgents = Integer.valueOf(p.getProperty("liczbaAgentów"));
-
-//        Random random = new Random(Integer.valueOf(p.getProperty("seed")));
-//
-//        int k = random.nextInt();/////////////////
+    public SocialNetwork(Properties properties, Random random) {
+        initRandomly(properties, random);
     }
 
-    public SocialNetwork(Properties p) {
-        initRandomly(p);
+    public List<Agent> getAgents() {
+        return this.agents;
+    }
+
+    public int getNumberOfAliveHealthyAgents() {
+        return this.numberOfAliveHealthyAgents;
+    }
+
+    public int getNumberOfAliveInfectedAgents() {
+        return this.numberOfAliveInfectedAgents;
+    }
+
+    public int getNumberOfAliveImmuneAgents() {
+        return this.numberOfAliveImmuneAgents;
+    }
+
+    public void removeAgent(Agent agent) {
+        this.agents.remove(agent);
+    }
+
+    public void updateNumberOfAgents() {
+        this.numberOfAliveHealthyAgents = 0;
+        this.numberOfAliveInfectedAgents = 0;
+        this.numberOfAliveImmuneAgents = 0;
+
+        for (Agent agent : this.agents) {
+            switch (agent.getHealth()) {
+                case HEALTHY:
+                    ++this.numberOfAliveHealthyAgents;
+                    break;
+                case INFECTED:
+                    ++this.numberOfAliveInfectedAgents;
+                    break;
+                case IMMUNE:
+                    ++this.numberOfAliveImmuneAgents;
+                    break;
+            }
+        }
+    }
+
+    private void initRandomly(Properties properties, Random random) {
+        int numberOfAgents = Integer.parseInt(properties.getProperty("liczbaAgentów"));
+
+        this.numberOfAliveHealthyAgents = numberOfAgents - 1;
+        this.numberOfAliveInfectedAgents = 1;
+        this.numberOfAliveImmuneAgents = 0;
+
+        List<Agent> l = new ArrayList<>();
+
+        int infectedAgent = 1 + random.nextInt(numberOfAgents);
+
+        for (int i = 1; i <= numberOfAgents; ++i) {
+            Health health = (i == infectedAgent) ? Health.INFECTED : Health.HEALTHY;
+
+            boolean isOutgoing = random.nextDouble() <= Double.parseDouble(properties.getProperty("prawdTowarzyski"));
+            Agent agent = isOutgoing ? new OutgoingAgent(i, health, new ArrayList<>(), new ArrayList<>()) :
+                    new StandardAgent(i, health, new ArrayList<>(), new ArrayList<>());
+
+            l.add(agent);
+        }
+
+        int edgesToAdd = (int) (Math.round((Double.parseDouble(properties.getProperty("śrZnajomych")) * numberOfAgents) / 2));
+        while (edgesToAdd > 0) {
+            Agent a1 = l.get(random.nextInt(numberOfAgents));
+            Agent a2 = l.get(random.nextInt(numberOfAgents));
+
+            if (a1 == a2) {
+                continue;
+            }
+
+            if (a1.addFriend(a2)) {
+                a2.addFriend(a1);
+                --edgesToAdd;
+            }
+        }
+
+        this.agents = l;
+    }
+
+
+    public void printGraph() {
+        for (Agent agent : agents) {
+            System.out.print(agent.getId());
+
+            List<Agent> friends = agent.getFriends();
+            if (friends.isEmpty()) {
+                System.out.println();
+                continue;
+            }
+
+            for (Agent friend : friends) {
+                System.out.print(" " + friend.getId());
+            }
+
+            System.out.println();
+        }
     }
 }

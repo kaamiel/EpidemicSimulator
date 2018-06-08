@@ -1,5 +1,5 @@
 public enum Health {
 
-    HEALTHY, INFECTED, IMMUNE;
+    HEALTHY, INFECTED, IMMUNE, DEAD
 
 }

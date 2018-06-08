@@ -13,10 +13,70 @@ public class Symulacja {
 
         Properties defaultProperties = readDefaultProperties();
         Properties simulationConf = readSimulationConf();
-
-        Map<String, Object> properties = checkAndMerge(defaultProperties, simulationConf);
-
+        Properties properties = checkAndMerge(defaultProperties, simulationConf);
         System.out.println(properties);
+
+        Random random = new Random(Integer.parseInt(properties.getProperty("seed")));
+
+        // wylosowanie grafu
+        SocialNetwork socialNetwork = new SocialNetwork(properties, random);
+
+        System.out.println("\n# agenci jako: id typ lub id* typ dla chorego");
+        for (Agent agent : socialNetwork.getAgents()) {
+            System.out.println(agent);
+        }
+
+        System.out.println("\n# graf");
+        socialNetwork.printGraph();
+
+        int numberOfDays = Integer.parseInt(properties.getProperty("liczbaDni"));
+
+        System.out.println("\n# liczność w kolejnych dniach");
+        for (int currentDay = 1; currentDay <= numberOfDays; ++currentDay) {
+
+            System.out.println(socialNetwork.getNumberOfAliveHealthyAgents() + " " +
+                    socialNetwork.getNumberOfAliveInfectedAgents() + " " +
+                    socialNetwork.getNumberOfAliveImmuneAgents());
+
+            List<Agent> toRemove = new ArrayList<>();
+
+            for (Agent agent : socialNetwork.getAgents()) {
+                // umieranie
+                boolean died = agent.die(properties, random);
+
+                if (died) {
+                    toRemove.add(agent);
+                    continue;
+                }
+
+                // zdrowienie
+                agent.recover(properties, random);
+
+
+            }
+
+            for (Agent agent : toRemove) {
+                socialNetwork.removeAgent(agent);
+            }
+
+            // umawianie spotkań
+            if (currentDay < numberOfDays) {
+                for (Agent agent : socialNetwork.getAgents()) {
+                    agent.makeAppointments(properties, random, currentDay);
+                }
+            }
+
+            // spotkania przypadające na dany dzień
+            for (Agent agent : socialNetwork.getAgents()) {
+                agent.meetFriends(properties, random, currentDay);
+            }
+
+            socialNetwork.updateNumberOfAgents();
+
+        }
+        System.out.println(socialNetwork.getNumberOfAliveHealthyAgents() + " " +
+                socialNetwork.getNumberOfAliveInfectedAgents() + " " +
+                socialNetwork.getNumberOfAliveImmuneAgents());
 
 
     }
@@ -67,9 +127,9 @@ public class Symulacja {
         return p;
     }
 
-    private static Map<String, Object> checkAndMerge(Properties defaultProperties, Properties simulationConf) {
+    private static Properties checkAndMerge(Properties defaultProperties, Properties simulationConf) {
 
-        Map<String, Object> res = new HashMap<>();
+        Properties res = new Properties();
 
         List<String> keysForIntegerValues = new ArrayList<>(Arrays.asList("seed", "liczbaAgentów",
                 "liczbaDni", "śrZnajomych"));
@@ -80,8 +140,7 @@ public class Symulacja {
         List<String> keysForStringValues = new ArrayList<>(Collections.singletonList("plikZRaportem"));
 
         try {
-            Object value;
-            String getProperty = null, key = null;
+            String value = null, key = null;
             try {
                 for (String k : keysForIntegerValues) {
                     key = k;
@@ -89,12 +148,12 @@ public class Symulacja {
                         throw new NoValue(key);
                     }
 
-                    getProperty = defaultProperties.getProperty(key);
-                    value = Integer.valueOf(getProperty);
+                    value = defaultProperties.getProperty(key);
+                    Integer.parseInt(value);
 
                     if (simulationConf.containsKey(key)) {
-                        getProperty = simulationConf.getProperty(key);
-                        value = Integer.valueOf(getProperty);
+                        value = simulationConf.getProperty(key);
+                        Integer.parseInt(value);
                     }
 
                     res.put(key, value);
@@ -106,12 +165,12 @@ public class Symulacja {
                         throw new NoValue(key);
                     }
 
-                    getProperty = defaultProperties.getProperty(key);
-                    value = Double.valueOf(getProperty);
+                    value = defaultProperties.getProperty(key);
+                    Double.parseDouble(value);
 
                     if (simulationConf.containsKey(key)) {
-                        getProperty = simulationConf.getProperty(key);
-                        value = Integer.valueOf(getProperty);
+                        value = simulationConf.getProperty(key);
+                        Double.parseDouble(value);
                     }
 
                     res.put(key, value);
@@ -123,21 +182,26 @@ public class Symulacja {
                         throw new NoValue(key);
                     }
 
-                    getProperty = defaultProperties.getProperty(key);
+                    value = defaultProperties.getProperty(key);
 
                     if (simulationConf.containsKey(key)) {
-                        getProperty = simulationConf.getProperty(key);
+                        value = simulationConf.getProperty(key);
                     }
 
-                    res.put(key, getProperty);
+                    res.put(key, value);
                 }
             } catch (NumberFormatException e) {
-                throw new BadValue(getProperty, key);
+                throw new BadValue(value, key);
             }
 
-//            if (res.get("prawdSpotkania").equals(1.0)) {
-//                throw new BadValue(1.0, "prawdSpotkania");
-//            }
+            //////
+            if (Double.valueOf(res.getProperty("prawdSpotkania")).equals(1.0)) {
+                throw new BadValue(res.getProperty("prawdSpotkania"), "prawdSpotkania");
+            }
+            if (Integer.parseInt(res.getProperty("śrZnajomych")) >= Integer.parseInt(res.getProperty("liczbaAgentów"))) {
+                throw new BadValue(res.getProperty("śrZnajomych"), "śrZnajomych");
+            }
+
         } catch (NoValue e) {
             System.err.println(e.getMessage());
             System.exit(4);
@@ -157,7 +221,7 @@ class NoValue extends Exception {
 }
 
 class BadValue extends Exception {
-    BadValue(Object value, String key) {
+    BadValue(String value, String key) {
         super("Niedozwolona wartość \"" + value + "\" dla klucza " + key);
     }
 }
