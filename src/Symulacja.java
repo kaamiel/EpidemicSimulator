@@ -52,7 +52,6 @@ public class Symulacja {
                 // zdrowienie
                 agent.recover(properties, random);
 
-
             }
 
             for (Agent agent : toRemove) {
@@ -77,7 +76,6 @@ public class Symulacja {
         System.out.println(socialNetwork.getNumberOfAliveHealthyAgents() + " " +
                 socialNetwork.getNumberOfAliveInfectedAgents() + " " +
                 socialNetwork.getNumberOfAliveImmuneAgents());
-
 
     }
 
@@ -145,6 +143,7 @@ public class Symulacja {
                 for (String k : keysForIntegerValues) {
                     key = k;
                     if (!defaultProperties.containsKey(key) || defaultProperties.getProperty(key).equals("")) {
+                        //TODO: poprawić, nie zawsze jest źle
                         throw new NoValue(key);
                     }
 

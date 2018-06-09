@@ -8,13 +8,15 @@ public abstract class Agent {
     protected int id;
     protected Health health;
     protected List<Agent> friends;
-    protected List<Appointment> appointments;
+    protected List<Appointment> appointments; // i invited them
+    protected List<Appointment> invitations; // they invited me
 
-    public Agent(int id, Health health, List<Agent> friends, List<Appointment> appointments) {
+    public Agent(int id, Health health, List<Agent> friends, List<Appointment> appointments, List<Appointment> invitations) {
         this.id = id;
         this.health = health;
         this.friends = friends;
         this.appointments = appointments;
+        this.invitations = invitations;
     }
 
     public int getId() {
@@ -26,7 +28,7 @@ public abstract class Agent {
     }
 
     public List<Agent> getFriends() {
-        return friends;
+        return this.friends;
     }
 
     public boolean addFriend(Agent agent) {
@@ -41,6 +43,11 @@ public abstract class Agent {
         for (Agent friend : friends) {
             friend.friends.remove(this);
         }
+
+        for (Appointment invitation : invitations) {
+            // i am invited
+            invitation.getInviter().appointments.remove(invitation);
+        }
     }
 
     public boolean die(Properties properties, Random random) {
@@ -52,7 +59,6 @@ public abstract class Agent {
 
         if (toDieOrNotToDie) {
             tellFriendsYoureDead();
-            this.health = Health.DEAD;
             return true;
         }
         return false;
@@ -72,12 +78,11 @@ public abstract class Agent {
 
     public abstract void makeAppointments(Properties properties, Random random, int currentDay);
 
-    private void meetFriend(Properties properties, Random random, Agent friend) {
-        if (friend.health == Health.DEAD) {
-            return;
-        }
-
+    private void meetFriend(Properties properties, Random random, Appointment appointment) {
         double probability = Double.parseDouble(properties.getProperty("prawdZarażenia"));
+
+        // i am inviter
+        Agent friend = appointment.getInvited();
 
         if (this.health == Health.INFECTED && friend.health == Health.HEALTHY) {
             boolean toInfectOrNotToInfect = random.nextDouble() <= probability;
@@ -94,6 +99,8 @@ public abstract class Agent {
                 this.health = Health.INFECTED;
             }
         }
+
+        friend.invitations.remove(appointment);
     }
 
     public void meetFriends(Properties properties, Random random, int currentDay) {
@@ -106,12 +113,11 @@ public abstract class Agent {
                 break;
             }
 
-            meetFriend(properties, random, appointment.getAgent());
+            meetFriend(properties, random, appointment);
             toRemove.add(appointment);
         }
 
-        for (Appointment appointment : toRemove) {
-            this.appointments.remove(appointment);
-        }
+        this.appointments.removeAll(toRemove);
+
     }
 }

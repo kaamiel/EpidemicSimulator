@@ -69,8 +69,8 @@ public class SocialNetwork {
             Health health = (i == infectedAgent) ? Health.INFECTED : Health.HEALTHY;
 
             boolean isOutgoing = random.nextDouble() <= Double.parseDouble(properties.getProperty("prawdTowarzyski"));
-            Agent agent = isOutgoing ? new OutgoingAgent(i, health, new ArrayList<>(), new ArrayList<>()) :
-                    new StandardAgent(i, health, new ArrayList<>(), new ArrayList<>());
+            Agent agent = isOutgoing ? new OutgoingAgent(i, health) :
+                    new StandardAgent(i, health);
 
             l.add(agent);
         }
@@ -93,18 +93,11 @@ public class SocialNetwork {
         this.agents = l;
     }
 
-
     public void printGraph() {
         for (Agent agent : agents) {
             System.out.print(agent.getId());
 
-            List<Agent> friends = agent.getFriends();
-            if (friends.isEmpty()) {
-                System.out.println();
-                continue;
-            }
-
-            for (Agent friend : friends) {
+            for (Agent friend : agent.getFriends()) {
                 System.out.print(" " + friend.getId());
             }
 

@@ -2,7 +2,7 @@
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
     <comment>wartości dla symulacji</comment>
-    <entry key="seed">6</entry>
-    <entry key="śrZnajomych">10</entry>
+    <entry key="seed">7</entry>
+    <entry key="śrZnajomych">20</entry>
     <entry key="plikZRaportem">./raport_5_25.txt</entry>
 </properties>

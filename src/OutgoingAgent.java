@@ -5,8 +5,12 @@ import java.util.Random;
 
 public class OutgoingAgent extends Agent {
 
-    public OutgoingAgent(int id, Health health, List<Agent> friends, List<Appointment> appointments) {
-        super(id, health, friends, appointments);
+    public OutgoingAgent(int id, Health health, List<Agent> friends, List<Appointment> appointments, List<Appointment> invitations) {
+        super(id, health, friends, appointments, invitations);
+    }
+
+    public OutgoingAgent(int id, Health health) {
+        this(id, health, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
 
     @Override
@@ -37,11 +41,14 @@ public class OutgoingAgent extends Agent {
         int numberOfCandidates = candidates.size();
 
         while (toMakeOrNotToMake) {
-            Agent agent = candidates.get(random.nextInt(numberOfCandidates));
+            Agent invited = candidates.get(random.nextInt(numberOfCandidates));
             int day = currentDay + 1 +
                     random.nextInt(Integer.parseInt(properties.getProperty("liczbaDni")) - currentDay);
 
-            appointments.add(new Appointment(day, agent));
+            Appointment appointment = new Appointment(day, this, invited);
+
+            invited.invitations.add(appointment);
+            this.appointments.add(appointment);
 
             toMakeOrNotToMake = random.nextDouble() <= probability;
         }

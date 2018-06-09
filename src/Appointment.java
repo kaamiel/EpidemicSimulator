@@ -1,19 +1,25 @@
 public class Appointment implements Comparable<Appointment> {
 
     private int day;
-    private Agent agent;
+    private Agent inviter;
+    private Agent invited;
 
-    public Appointment(int day, Agent agent) {
+    public Appointment(int day, Agent inviter, Agent invited) {
         this.day = day;
-        this.agent = agent;
+        this.inviter = inviter;
+        this.invited = invited;
     }
 
     public int getDay() {
         return this.day;
     }
 
-    public Agent getAgent() {
-        return this.agent;
+    public Agent getInviter() {
+        return this.inviter;
+    }
+
+    public Agent getInvited() {
+        return this.invited;
     }
 
     @Override

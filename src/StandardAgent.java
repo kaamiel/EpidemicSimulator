@@ -1,11 +1,16 @@
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
 public class StandardAgent extends Agent {
 
-    public StandardAgent(int id, Health health, List<Agent> friends, List<Appointment> appointments) {
-        super(id, health, friends, appointments);
+    public StandardAgent(int id, Health health, List<Agent> friends, List<Appointment> appointments, List<Appointment> invitations) {
+        super(id, health, friends, appointments, invitations);
+    }
+
+    public StandardAgent(int id, Health health) {
+        this(id, health, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
 
     @Override
@@ -24,11 +29,14 @@ public class StandardAgent extends Agent {
         int numberOfCandidates = friends.size();
 
         while (toMakeOrNotToMake) {
-            Agent agent = friends.get(random.nextInt(numberOfCandidates));
+            Agent invited = friends.get(random.nextInt(numberOfCandidates));
             int day = currentDay + 1 +
                     random.nextInt(Integer.parseInt(properties.getProperty("liczbaDni")) - currentDay);
 
-            appointments.add(new Appointment(day, agent));
+            Appointment appointment = new Appointment(day, this, invited);
+
+            invited.invitations.add(appointment);
+            this.appointments.add(appointment);
 
             toMakeOrNotToMake = random.nextDouble() <= probability;
         }
