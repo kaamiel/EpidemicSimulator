@@ -32,19 +32,19 @@ public abstract class Agent {
     }
 
     public boolean addFriend(Agent agent) {
-        if (!friends.contains(agent)) {
-            friends.add(agent);
+        if (!this.friends.contains(agent)) {
+            this.friends.add(agent);
             return true;
         }
         return false;
     }
 
     private void tellFriendsYoureDead() {
-        for (Agent friend : friends) {
+        for (Agent friend : this.friends) {
             friend.friends.remove(this);
         }
 
-        for (Appointment invitation : invitations) {
+        for (Appointment invitation : this.invitations) {
             // i am invited
             invitation.getInviter().appointments.remove(invitation);
         }

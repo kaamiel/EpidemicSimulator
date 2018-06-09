@@ -26,4 +26,9 @@ public class Appointment implements Comparable<Appointment> {
     public int compareTo(Appointment o) {
         return Integer.compare(this.day, o.day);
     }
+
+    @Override
+    public String toString() {
+        return day + ": " + inviter + " -> " + invited;
+    }
 }

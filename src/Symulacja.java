@@ -1,7 +1,4 @@
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.nio.channels.Channels;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
@@ -14,69 +11,77 @@ public class Symulacja {
         Properties defaultProperties = readDefaultProperties();
         Properties simulationConf = readSimulationConf();
         Properties properties = checkAndMerge(defaultProperties, simulationConf);
-        System.out.println(properties);
+        //TODO: poprawić
 
         Random random = new Random(Integer.parseInt(properties.getProperty("seed")));
 
-        // wylosowanie grafu
-        SocialNetwork socialNetwork = new SocialNetwork(properties, random);
-
-        System.out.println("\n# agenci jako: id typ lub id* typ dla chorego");
-        for (Agent agent : socialNetwork.getAgents()) {
-            System.out.println(agent);
-        }
-
-        System.out.println("\n# graf");
-        socialNetwork.printGraph();
-
-        int numberOfDays = Integer.parseInt(properties.getProperty("liczbaDni"));
-
-        System.out.println("\n# liczność w kolejnych dniach");
-        for (int currentDay = 1; currentDay <= numberOfDays; ++currentDay) {
-
-            System.out.println(socialNetwork.getNumberOfAliveHealthyAgents() + " " +
-                    socialNetwork.getNumberOfAliveInfectedAgents() + " " +
-                    socialNetwork.getNumberOfAliveImmuneAgents());
-
-            List<Agent> toRemove = new ArrayList<>();
-
-            for (Agent agent : socialNetwork.getAgents()) {
-                // umieranie
-                boolean died = agent.die(properties, random);
-
-                if (died) {
-                    toRemove.add(agent);
-                    continue;
+        try (FileWriter writer = new FileWriter(properties.getProperty("plikZRaportem"))) {
+            writer.write("# twoje wyniki powinny zawierać te komentarze\n");
+            for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+                if (!entry.getKey().equals("plikZRaportem")) {
+                    writer.write(entry.toString() + "\n");
                 }
-
-                // zdrowienie
-                agent.recover(properties, random);
-
             }
 
-            for (Agent agent : toRemove) {
-                socialNetwork.removeAgent(agent);
+            // wylosowanie grafu
+            SocialNetwork socialNetwork = new SocialNetwork(properties, random);
+
+            writer.write("\n# agenci jako: id typ lub id* typ dla chorego\n");
+            for (Agent agent : socialNetwork.getAgents()) {
+                writer.write(agent.toString() + "\n");
             }
 
-            // umawianie spotkań
-            if (currentDay < numberOfDays) {
+            writer.write("\n# graf\n");
+            writer.write(socialNetwork.graph());
+
+            int numberOfDays = Integer.parseInt(properties.getProperty("liczbaDni"));
+
+            writer.write("\n# liczność w kolejnych dniach\n");
+            for (int currentDay = 1; currentDay <= numberOfDays; ++currentDay) {
+
+                writer.write(socialNetwork.numberOfAliveAgents() + "\n");
+
+                List<Agent> toRemove = new ArrayList<>();
+
                 for (Agent agent : socialNetwork.getAgents()) {
-                    agent.makeAppointments(properties, random, currentDay);
+                    // umieranie
+                    boolean died = agent.die(properties, random);
+
+                    if (died) {
+                        toRemove.add(agent);
+                        continue;
+                    }
+
+                    // zdrowienie
+                    agent.recover(properties, random);
+
                 }
+
+                for (Agent agent : toRemove) {
+                    socialNetwork.removeAgent(agent);
+                }
+
+                // umawianie spotkań
+                if (currentDay < numberOfDays) {
+                    for (Agent agent : socialNetwork.getAgents()) {
+                        agent.makeAppointments(properties, random, currentDay);
+                    }
+                }
+
+                // spotkania przypadające na dany dzień
+                for (Agent agent : socialNetwork.getAgents()) {
+                    agent.meetFriends(properties, random, currentDay);
+                }
+
+                socialNetwork.updateNumberOfAgents();
+
             }
 
-            // spotkania przypadające na dany dzień
-            for (Agent agent : socialNetwork.getAgents()) {
-                agent.meetFriends(properties, random, currentDay);
-            }
-
-            socialNetwork.updateNumberOfAgents();
+            writer.write(socialNetwork.numberOfAliveAgents());
+        } catch (IOException e) {
+            System.err.println("Problem z plikiem " + properties.getProperty("plikZRaportem"));
 
         }
-        System.out.println(socialNetwork.getNumberOfAliveHealthyAgents() + " " +
-                socialNetwork.getNumberOfAliveInfectedAgents() + " " +
-                socialNetwork.getNumberOfAliveImmuneAgents());
-
     }
 
     private static Properties readDefaultProperties() {

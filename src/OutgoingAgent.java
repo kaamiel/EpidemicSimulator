@@ -15,7 +15,7 @@ public class OutgoingAgent extends Agent {
 
     @Override
     public void makeAppointments(Properties properties, Random random, int currentDay) {
-        if (friends.isEmpty()) {
+        if (this.friends.isEmpty()) {
             return;
         }
 
@@ -27,9 +27,9 @@ public class OutgoingAgent extends Agent {
             return;
         }
 
-        List<Agent> candidates = new ArrayList<>(friends);
+        List<Agent> candidates = new ArrayList<>(this.friends);
         if (this.health != Health.INFECTED) {
-            for (Agent friend : friends) {
+            for (Agent friend : this.friends) {
                 for (Agent friendOfFriend : friend.friends) {
                     if ((friendOfFriend != this) && (!candidates.contains(friendOfFriend))) {
                         candidates.add(friendOfFriend);

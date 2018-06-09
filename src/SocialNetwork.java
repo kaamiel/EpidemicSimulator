@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class SocialNetwork {
 
-    private List<Agent> agents;
+    private List<Agent> agents; // alive agents
     private int numberOfAliveHealthyAgents;
     private int numberOfAliveInfectedAgents;
     private int numberOfAliveImmuneAgents;
@@ -18,20 +18,13 @@ public class SocialNetwork {
         return this.agents;
     }
 
-    public int getNumberOfAliveHealthyAgents() {
-        return this.numberOfAliveHealthyAgents;
-    }
-
-    public int getNumberOfAliveInfectedAgents() {
-        return this.numberOfAliveInfectedAgents;
-    }
-
-    public int getNumberOfAliveImmuneAgents() {
-        return this.numberOfAliveImmuneAgents;
-    }
-
     public void removeAgent(Agent agent) {
         this.agents.remove(agent);
+    }
+
+    public String numberOfAliveAgents() {
+        return this.numberOfAliveHealthyAgents + " " + this.numberOfAliveInfectedAgents +
+                " " + this.numberOfAliveImmuneAgents;
     }
 
     public void updateNumberOfAgents() {
@@ -93,15 +86,19 @@ public class SocialNetwork {
         this.agents = l;
     }
 
-    public void printGraph() {
-        for (Agent agent : agents) {
-            System.out.print(agent.getId());
+    public String graph() {
+        StringBuilder builder = new StringBuilder();
+
+        for (Agent agent : this.agents) {
+            builder.append(agent.getId());
 
             for (Agent friend : agent.getFriends()) {
-                System.out.print(" " + friend.getId());
+               builder.append(" ").append(friend.getId());
             }
 
-            System.out.println();
+            builder.append('\n');
         }
+
+        return builder.toString();
     }
 }

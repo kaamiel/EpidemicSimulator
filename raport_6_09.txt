@@ -1,0 +1,57 @@
+# twoje wyniki powinny zawierać te komentarze
+liczbaAgentów=5
+prawdZarażenia=0.5
+seed=7
+prawdTowarzyski=0.2
+śmiertelność=0.02
+liczbaDni=30
+prawdSpotkania=0.2
+śrZnajomych=3
+prawdWyzdrowienia=0.01
+
+# agenci jako: id typ lub id* typ dla chorego
+1 zwykły
+2* towarzyski
+3 zwykły
+4 zwykły
+5 zwykły
+
+# graf
+1 2 5 4
+2 1 3 4
+3 4 2 5
+4 3 5 2 1
+5 3 4 1
+
+# liczność w kolejnych dniach
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+4 1 0
+3 2 0
+2 3 0
+1 4 0
+0 4 0
+0 4 0
+0 4 0
+0 4 0
+0 4 0
+0 4 0
+0 4 0

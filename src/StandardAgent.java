@@ -15,7 +15,7 @@ public class StandardAgent extends Agent {
 
     @Override
     public void makeAppointments(Properties properties, Random random, int currentDay) {
-        if (friends.isEmpty()) {
+        if (this.friends.isEmpty()) {
             return;
         }
 
@@ -26,7 +26,7 @@ public class StandardAgent extends Agent {
 
         boolean toMakeOrNotToMake = random.nextDouble() <= probability;
 
-        int numberOfCandidates = friends.size();
+        int numberOfCandidates = this.friends.size();
 
         while (toMakeOrNotToMake) {
             Agent invited = friends.get(random.nextInt(numberOfCandidates));
@@ -41,7 +41,6 @@ public class StandardAgent extends Agent {
             toMakeOrNotToMake = random.nextDouble() <= probability;
         }
     }
-
 
     @Override
     public String toString() {
