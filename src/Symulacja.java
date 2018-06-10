@@ -4,6 +4,18 @@ import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+class NoValue extends Exception {
+    NoValue(String key) {
+        super("Brak wartości dla klucza " + key);
+    }
+}
+
+class BadValue extends Exception {
+    BadValue(String value, String key) {
+        super("Niedozwolona wartość \"" + value + "\" dla klucza " + key);
+    }
+}
+
 public class Symulacja {
 
     public static void main(String[] args) {
@@ -11,15 +23,14 @@ public class Symulacja {
         Properties defaultProperties = readDefaultProperties();
         Properties simulationConf = readSimulationConf();
         Properties properties = checkAndMerge(defaultProperties, simulationConf);
-        //TODO: poprawić
 
         Random random = new Random(Integer.parseInt(properties.getProperty("seed")));
 
         try (FileWriter writer = new FileWriter(properties.getProperty("plikZRaportem"))) {
             writer.write("# twoje wyniki powinny zawierać te komentarze\n");
-            for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-                if (!entry.getKey().equals("plikZRaportem")) {
-                    writer.write(entry.toString() + "\n");
+            for (String key : properties.stringPropertyNames()) {
+                if (!key.equals("plikZRaportem")) {
+                    writer.write(key + "=" + properties.getProperty(key) + "\n");
                 }
             }
 
@@ -79,10 +90,15 @@ public class Symulacja {
 
             writer.write(socialNetwork.numberOfAliveAgents());
         } catch (IOException e) {
-            System.err.println("Problem z plikiem " + properties.getProperty("plikZRaportem"));
-
+            try {
+                throw new BadValue(properties.getProperty("plikZRaportem"), "plikZRaportem");
+            } catch (BadValue e2) {
+                System.err.println(e2.getMessage());
+                System.exit(5);
+            }
         }
     }
+
 
     private static Properties readDefaultProperties() {
         Properties p = new Properties();
@@ -101,7 +117,6 @@ public class Symulacja {
             System.exit(1);
         } catch (IOException e) {
             System.err.println("Błąd w pliku default.properties");
-//            e.printStackTrace();
             System.exit(3);
         }
 
@@ -123,7 +138,6 @@ public class Symulacja {
             System.exit(1);
         } catch (IOException e) {
             System.err.println("Błąd w pliku simulation-conf.xml");
-//            e.printStackTrace();
             System.exit(3);
         }
 
@@ -132,79 +146,134 @@ public class Symulacja {
 
     private static Properties checkAndMerge(Properties defaultProperties, Properties simulationConf) {
 
-        Properties res = new Properties();
+        Properties res = null;
 
         List<String> keysForIntegerValues = new ArrayList<>(Arrays.asList("seed", "liczbaAgentów",
                 "liczbaDni", "śrZnajomych"));
-
         List<String> keysForDoubleValues = new ArrayList<>(Arrays.asList("prawdTowarzyski",
                 "prawdSpotkania", "prawdZarażenia", "prawdWyzdrowienia", "śmiertelność"));
-
-        List<String> keysForStringValues = new ArrayList<>(Collections.singletonList("plikZRaportem"));
+        String keyForStringValue = "plikZRaportem";
 
         try {
             String value = null, key = null;
             try {
+                res = new Properties(defaultProperties);
+                Set<String> keySet = res.stringPropertyNames();
+
                 for (String k : keysForIntegerValues) {
                     key = k;
-                    if (!defaultProperties.containsKey(key) || defaultProperties.getProperty(key).equals("")) {
-                        //TODO: poprawić, nie zawsze jest źle
-                        throw new NoValue(key);
-                    }
-
-                    value = defaultProperties.getProperty(key);
-                    Integer.parseInt(value);
-
-                    if (simulationConf.containsKey(key)) {
-                        value = simulationConf.getProperty(key);
+                    if (keySet.contains(key)) {
+                        value = res.getProperty(key);
                         Integer.parseInt(value);
                     }
-
-                    res.put(key, value);
                 }
 
                 for (String k : keysForDoubleValues) {
                     key = k;
-                    if (!defaultProperties.containsKey(key) || defaultProperties.getProperty(key).equals("")) {
-                        throw new NoValue(key);
+                    if (keySet.contains(key)) {
+                        value = res.getProperty(key);
+                        double d = Double.parseDouble(value);
+
+                        // all double values are probability
+                        if (d < 0.0 || 1.0 < d) {
+                            throw new BadValue(value, key);
+                        }
                     }
-
-                    value = defaultProperties.getProperty(key);
-                    Double.parseDouble(value);
-
-                    if (simulationConf.containsKey(key)) {
-                        value = simulationConf.getProperty(key);
-                        Double.parseDouble(value);
-                    }
-
-                    res.put(key, value);
                 }
 
-                for (String k : keysForStringValues) {
-                    key = k;
-                    if (!defaultProperties.containsKey(key) || defaultProperties.getProperty(key).equals("")) {
-                        throw new NoValue(key);
+                // manual checks...
+                key = "liczbaAgentów";
+                value = res.getProperty(key);
+                if (value != null) {
+                    int v = Integer.parseInt(value);
+                    if (v < 1 || 1000000 < v) {
+                        throw new BadValue(value, key);
                     }
 
-                    value = defaultProperties.getProperty(key);
-
-                    if (simulationConf.containsKey(key)) {
-                        value = simulationConf.getProperty(key);
+                    key = "śrZnajomych";
+                    value = res.getProperty(key);
+                    if (value != null) {
+                        int v2 = Integer.parseInt(value);
+                        if (v2 < 0) {
+                            throw new BadValue(value, key);
+                        }
                     }
-
-                    res.put(key, value);
                 }
+
+                key = "liczbaDni";
+                value = res.getProperty(key);
+                if (value != null) {
+                    int v = Integer.parseInt(value);
+                    if (v < 1 || 1000 < v) {
+                        throw new BadValue(value, key);
+                    }
+                }
+
+                // merging
+                for (Object k : simulationConf.keySet()) {
+                    key = k.toString();
+                    value = simulationConf.getProperty(key);
+
+                    if (keysForIntegerValues.contains(key)) {
+                        Integer.parseInt(value);
+                    } else if (keysForDoubleValues.contains(key)) {
+                        double d = Double.parseDouble(value);
+
+                        // all double values are probability
+                        if (d < 0.0 || 1.0 < d) {
+                            throw new BadValue(value, key);
+                        }
+                    }
+
+                    res.setProperty(key, value);
+                }
+
+                // manual checks...
+                keySet = res.stringPropertyNames();
+                for (String k : keysForIntegerValues) {
+                    if (!keySet.contains(k)) {
+                        throw new NoValue(k);
+                    }
+                }
+                for (String k : keysForDoubleValues) {
+                    if (!keySet.contains(k)) {
+                        throw new NoValue(k);
+                    }
+                }
+                if (!keySet.contains(keyForStringValue)) {
+                    throw new NoValue(keyForStringValue);
+                }
+
+                key = "liczbaAgentów";
+                value = res.getProperty(key);
+                int v = Integer.parseInt(value);
+                if (v < 1 || 1000000 < v) {
+                    throw new BadValue(value, key);
+                }
+                key = "śrZnajomych";
+                value = res.getProperty(key);
+                int v2 = Integer.parseInt(value);
+                if (v2 < 0 || v - 1 < v2) {
+                    throw new BadValue(value, key);
+                }
+
+                key = "liczbaDni";
+                value = res.getProperty(key);
+                v = Integer.parseInt(value);
+                if (v < 1 || 1000 < v) {
+                    throw new BadValue(value, key);
+                }
+
+                key = "prawdSpotkania";
+                value = res.getProperty(key);
+                if (Double.parseDouble(value) == 1.0) {
+                    throw new BadValue(value, key);
+                }
+
             } catch (NumberFormatException e) {
                 throw new BadValue(value, key);
             }
 
-            //////
-            if (Double.valueOf(res.getProperty("prawdSpotkania")).equals(1.0)) {
-                throw new BadValue(res.getProperty("prawdSpotkania"), "prawdSpotkania");
-            }
-            if (Integer.parseInt(res.getProperty("śrZnajomych")) >= Integer.parseInt(res.getProperty("liczbaAgentów"))) {
-                throw new BadValue(res.getProperty("śrZnajomych"), "śrZnajomych");
-            }
 
         } catch (NoValue e) {
             System.err.println(e.getMessage());
@@ -215,17 +284,5 @@ public class Symulacja {
         }
 
         return res;
-    }
-}
-
-class NoValue extends Exception {
-    NoValue(String key) {
-        super("Brak wartości dla klucza " + key);
-    }
-}
-
-class BadValue extends Exception {
-    BadValue(String value, String key) {
-        super("Niedozwolona wartość \"" + value + "\" dla klucza " + key);
     }
 }

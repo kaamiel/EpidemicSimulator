@@ -6,8 +6,8 @@ prawdTowarzyski=0.2
 śmiertelność=0.02
 liczbaDni=30
 prawdSpotkania=0.2
-śrZnajomych=3
 prawdWyzdrowienia=0.01
+śrZnajomych=3
 
 # agenci jako: id typ lub id* typ dla chorego
 1 zwykły
