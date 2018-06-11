@@ -39,7 +39,7 @@ public abstract class Agent {
         return false;
     }
 
-    private void tellFriendsYoureDead() {
+    private void tellFriendsYouDied() {
         for (Agent friend : this.friends) {
             friend.friends.remove(this);
         }
@@ -47,6 +47,10 @@ public abstract class Agent {
         for (Appointment invitation : this.invitations) {
             // i am invited
             invitation.getInviter().appointments.remove(invitation);
+        }
+        for (Appointment appointment : this.appointments) {
+            // i am inviter
+            appointment.getInvited().invitations.remove(appointment);
         }
     }
 
@@ -58,7 +62,7 @@ public abstract class Agent {
         boolean toDieOrNotToDie = random.nextDouble() <= Double.parseDouble(properties.getProperty("śmiertelność"));
 
         if (toDieOrNotToDie) {
-            tellFriendsYoureDead();
+            tellFriendsYouDied();
             return true;
         }
         return false;
@@ -104,13 +108,11 @@ public abstract class Agent {
     }
 
     public void meetFriends(Properties properties, Random random, int currentDay) {
-        this.appointments.sort(Appointment::compareTo);
-
         List<Appointment> toRemove = new ArrayList<>();
 
         for (Appointment appointment : this.appointments) {
             if (appointment.getDay() > currentDay) {
-                break;
+                continue;
             }
 
             meetFriend(properties, random, appointment);

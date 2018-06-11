@@ -145,7 +145,7 @@ public class Symulacja {
     }
 
     private static Properties checkAndMerge(Properties defaultProperties, Properties simulationConf) {
-
+        // warning: ugly code
         Properties res = null;
 
         List<String> keysForIntegerValues = new ArrayList<>(Arrays.asList("seed", "liczbaAgentów",
@@ -273,7 +273,6 @@ public class Symulacja {
             } catch (NumberFormatException e) {
                 throw new BadValue(value, key);
             }
-
 
         } catch (NoValue e) {
             System.err.println(e.getMessage());

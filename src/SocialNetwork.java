@@ -62,13 +62,12 @@ public class SocialNetwork {
             Health health = (i == infectedAgent) ? Health.INFECTED : Health.HEALTHY;
 
             boolean isOutgoing = random.nextDouble() <= Double.parseDouble(properties.getProperty("prawdTowarzyski"));
-            Agent agent = isOutgoing ? new OutgoingAgent(i, health) :
-                    new StandardAgent(i, health);
+            Agent agent = isOutgoing ? new OutgoingAgent(i, health) : new StandardAgent(i, health);
 
             l.add(agent);
         }
 
-        int edgesToAdd = (int) (Math.round((Double.parseDouble(properties.getProperty("śrZnajomych")) * numberOfAgents) / 2));
+        long edgesToAdd = Math.round((Double.parseDouble(properties.getProperty("śrZnajomych")) * numberOfAgents) / 2);
         while (edgesToAdd > 0) {
             Agent a1 = l.get(random.nextInt(numberOfAgents));
             Agent a2 = l.get(random.nextInt(numberOfAgents));

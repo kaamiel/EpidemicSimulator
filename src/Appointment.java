@@ -1,4 +1,4 @@
-public class Appointment implements Comparable<Appointment> {
+public class Appointment {
 
     private int day;
     private Agent inviter;
@@ -20,11 +20,6 @@ public class Appointment implements Comparable<Appointment> {
 
     public Agent getInvited() {
         return this.invited;
-    }
-
-    @Override
-    public int compareTo(Appointment o) {
-        return Integer.compare(this.day, o.day);
     }
 
     @Override

@@ -3,6 +3,6 @@
 <properties>
     <comment>wartości dla symulacji</comment>
     <entry key="seed">7</entry>
-    <entry key="śrZnajomych">3</entry>
-    <entry key="plikZRaportem">./raport_6_09.txt</entry>
+    <entry key="śrZnajomych">30</entry>
+    <entry key="plikZRaportem">./raport_6_11.txt</entry>
 </properties>
