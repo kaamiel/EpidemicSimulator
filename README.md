@@ -2,7 +2,7 @@
 
 Object Oriented Programming task, mimuw
 
-Task is written in Polish.
+Mostly in Polish.
 
 
 Wprowadzenie
